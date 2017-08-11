@@ -8,8 +8,8 @@
 date_default_timezone_set('UTC');
 echo "現在時間: ".date("Y/m/d H:i")."<br>";
 $api = 'https://zh.wikipedia.org/w/api.php';
-$user = $_GET["user"] ?? "";
-$type = $_GET["type"] ?? "";
+$user = (isset($_GET["user"]) ? $_GET["user"] : "");
+$type = (isset($_GET["type"]) ? $_GET["type"] : "");
 $require = [
 	"patroller" => [
 		"registration" => false,

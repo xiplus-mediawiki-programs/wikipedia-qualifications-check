@@ -42,7 +42,7 @@ $rightname = [
 		<tr>
 			<td>Username:</td>
 			<td>
-				<input type="text" name="user" value="<?=$user?>" required>
+				<input type="text" name="user" value="<?=$user?>" required autofocus>
 			</td>
 		</tr>
 		<tr>

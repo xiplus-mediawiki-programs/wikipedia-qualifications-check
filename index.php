@@ -89,9 +89,14 @@ $res = file_get_contents($url);
 if ($res === false) {
 	exit("get firstedit fail");
 }
+
 $firstedit = json_decode($res, true);
-$firstedit = $firstedit["query"]["usercontribs"][0];
-$firstedit = strtotime($firstedit["timestamp"]);
+if (count($firstedit["query"]["usercontribs"]) === 0) {
+	$firstedit = 0;
+} else {
+	$firstedit = $firstedit["query"]["usercontribs"][0];
+	$firstedit = strtotime($firstedit["timestamp"]);
+}
 
 if ($registration > strtotime("-3 months")) {
 	$activedays = floor((time()-$registration)/86400);
@@ -153,7 +158,13 @@ echo "檢查 ".$user." 的 ".$rightname[$type]." 資格如下";
 	</tr>
 	<tr>
 		<td>首次編輯</td>
-		<td><?=date("Y/m/d H:i", $firstedit)?></td>
+		<td><?php
+		if ($firstedit === 0) {
+			echo "從未編輯";
+		} else {
+			echo date("Y/m/d H:i", $firstedit);
+		}
+		?></td>
 		<td><?php
 		if ($require[$type]["firstedit"]) {
 			echo "< ".date("Y/m/d H:i", $require[$type]["firstedit"]);
@@ -162,7 +173,7 @@ echo "檢查 ".$user." 的 ".$rightname[$type]." 資格如下";
 		}
 		?></td>
 		<td><?php
-		if ($require[$type]["firstedit"] && $firstedit > $require[$type]["firstedit"]) {
+		if ($require[$type]["firstedit"] && ($firstedit === 0 || $firstedit > $require[$type]["firstedit"])) {
 			echo "fail";
 		} else {
 			echo "pass";

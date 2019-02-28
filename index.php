@@ -42,7 +42,7 @@ $rightname = [
 		<tr>
 			<td>Username:</td>
 			<td>
-				<input type="text" name="user" value="<?=$user?>" required autofocus>
+				<input type="text" name="user" value="<?=htmlspecialchars($user)?>" required autofocus>
 			</td>
 		</tr>
 		<tr>
@@ -111,7 +111,7 @@ if ($registration > strtotime("-3 months")) {
 	$activeedit = end($activeedit["query"]["usercontribs"]);
 	$activeedit = strtotime($activeedit["timestamp"]);
 }
-echo "檢查 ".$user." 的 ".$rightname[$type]." 資格如下";
+echo "檢查 ".htmlspecialchars($user)." 的 ".$rightname[$type]." 資格如下";
 ?>
 <table>
 	<tr>

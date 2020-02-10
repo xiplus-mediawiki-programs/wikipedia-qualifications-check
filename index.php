@@ -29,12 +29,19 @@ $require = [
 		"editcount" => 50,
 		"firstedit" => false,
 		"active" => false
+	],
+	"autoconfirmed_tor" => [
+		"registration" => strtotime("-90 days"),
+		"editcount" => 100,
+		"firstedit" => false,
+		"active" => false
 	]
 ];
 $rightname = [
 	"patroller" => "巡查",
 	"rollbacker" => "回退",
-	"autoconfirmed" => "自動確認"
+	"autoconfirmed" => "自動確認",
+	"autoconfirmed_tor" => "自動確認（透過Tor編輯）"
 ];
 ?>
 <form>
@@ -52,6 +59,7 @@ $rightname = [
 					<option value="patroller" <?=($type=="patroller"?"selected":"")?>><?=$rightname["patroller"]?></option>
 					<option value="rollbacker" <?=($type=="rollbacker"?"selected":"")?>><?=$rightname["rollbacker"]?></option>
 					<option value="autoconfirmed" <?=($type=="autoconfirmed"?"selected":"")?>><?=$rightname["autoconfirmed"]?></option>
+					<option value="autoconfirmed_tor" <?=($type=="autoconfirmed_tor"?"selected":"")?>><?=$rightname["autoconfirmed_tor"]?></option>
 				</select>
 			</td>
 		</tr>
@@ -77,7 +85,7 @@ if (isset($uinfo["missing"])) {
 	exit("user not found");
 }
 
-if (!in_array($type, ["patroller", "rollbacker", "autoconfirmed"])) {
+if (!array_key_exists($type, $require)) {
 	exit("type error");
 }
 

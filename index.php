@@ -2,12 +2,18 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>zhwiki qualifications check</title>
+	<title>中文維基百科權限申請檢查</title>
+	<style>
+	table.bordered, .bordered th, .bordered td {
+		border: 1px solid black;
+		border-collapse: collapse;
+		padding: 1px 5px;
+	}
+	</style>
 </head>
 <body>
 <?php
 date_default_timezone_set('UTC');
-echo "現在時間: ".date("Y/m/d H:i")."<br>";
 $api = 'https://zh.wikipedia.org/w/api.php';
 $user = (isset($_GET["user"]) ? $_GET["user"] : "");
 $type = (isset($_GET["type"]) ? $_GET["type"] : "");
@@ -16,25 +22,29 @@ $require = [
 		"registration" => false,
 		"editcount" => 250,
 		"firstedit" => strtotime("-30 days"),
-		"active" => true
+		"active" => true,
+		"block" => strtotime("-1 year"),
 	],
 	"rollbacker" => [
 		"registration" => false,
 		"editcount" => 1000,
 		"firstedit" => strtotime("-90 days"),
-		"active" => true
+		"active" => true,
+		"block" => strtotime("-1 year"),
 	],
 	"autoconfirmed" => [
 		"registration" => strtotime("-7 days"),
 		"editcount" => 50,
 		"firstedit" => false,
-		"active" => false
+		"active" => false,
+		"block" => false,
 	],
 	"autoconfirmed_tor" => [
 		"registration" => strtotime("-90 days"),
 		"editcount" => 100,
 		"firstedit" => false,
-		"active" => false
+		"active" => false,
+		"block" => false,
 	]
 ];
 $rightname = [
@@ -47,13 +57,17 @@ $rightname = [
 <form>
 	<table>
 		<tr>
-			<td>Username:</td>
+			<td>現在時間：</td>
+			<td><?=date('Y/m/d H:i')?></td>
+		</tr>
+		<tr>
+			<td>使用者名稱：</td>
 			<td>
 				<input type="text" name="user" value="<?=htmlspecialchars($user)?>" required autofocus>
 			</td>
 		</tr>
 		<tr>
-			<td>right:</td>
+			<td>權限：</td>
 			<td>
 				<select name="type">
 					<option value="patroller" <?=($type=="patroller"?"selected":"")?>><?=$rightname["patroller"]?></option>
@@ -65,7 +79,7 @@ $rightname = [
 		</tr>
 		<tr>
 			<td></td>
-			<td><button type="submit">check</button></td>
+			<td><button type="submit">檢查</button></td>
 		</tr>
 	</table>
 </form>
@@ -119,9 +133,34 @@ if ($registration > strtotime("-3 months")) {
 	$activeedit = end($activeedit["query"]["usercontribs"]);
 	$activeedit = strtotime($activeedit["timestamp"]);
 }
-echo "檢查 ".htmlspecialchars($user)." 的 ".$rightname[$type]." 資格如下";
+
+$url = $api.'?action=query&format=json&list=logevents&utf8=1&letype=block&lelimit=1&letitle=User%3A'.urlencode($user);
+$res = file_get_contents($url);
+if ($res === false) {
+	exit("get block fail");
+}
+$res = json_decode($res, true);
+if (count($res['query']['logevents']) > 0) {
+	if ($res['query']['logevents'][0]['action'] === 'unblock') {
+		$block = strtotime($res['query']['logevents'][0]['timestamp']);
+	} else if (!isset($res['query']['logevents'][0]['params']['expiry'])) {
+		$block = true;
+	} else {
+		$block = strtotime($res['query']['logevents'][0]['params']['expiry']);
+	}
+} else {
+	$block = false;
+}
 ?>
-<table>
+<strong>通過本檢查表格不表示您的申請就會被通過，僅達到本頁資格而不具備申請頁上方提及的相關經驗的申請通常會被拒絕。</strong><br>
+不要在申請頁貼上本頁的結果，管理員會自行檢查。<br>
+檢查 <?=htmlspecialchars($user)?> 的 <?=$rightname[$type]?> 資格如下：<br>
+
+<?php
+define('PASS_TEXT', '通過');
+define('FAIL_TEXT', '不通過');
+?>
+<table class="bordered" style="margin-top: 5px;">
 	<tr>
 		<th>資格</th>
 		<th>用戶</th>
@@ -140,9 +179,9 @@ echo "檢查 ".htmlspecialchars($user)." 的 ".$rightname[$type]." 資格如下"
 		?></td>
 		<td><?php
 		if ($require[$type]["registration"] && $registration > $require[$type]["registration"]) {
-			echo "fail";
+			echo FAIL_TEXT;
 		} else {
-			echo "pass";
+			echo PASS_TEXT;
 		}
 		?></td>
 	</tr>
@@ -158,9 +197,9 @@ echo "檢查 ".htmlspecialchars($user)." 的 ".$rightname[$type]." 資格如下"
 		?></td>
 		<td><?php
 		if ($require[$type]["editcount"] && $editcount < $require[$type]["editcount"]) {
-			echo "fail";
+			echo FAIL_TEXT;
 		} else {
-			echo "pass";
+			echo PASS_TEXT;
 		}
 		?></td>
 	</tr>
@@ -182,12 +221,11 @@ echo "檢查 ".htmlspecialchars($user)." 的 ".$rightname[$type]." 資格如下"
 		?></td>
 		<td><?php
 		if ($require[$type]["firstedit"] && ($firstedit === 0 || $firstedit > $require[$type]["firstedit"])) {
-			echo "fail";
+			echo FAIL_TEXT;
 		} else {
-			echo "pass";
+			echo PASS_TEXT;
 		}
 		?></td>
-		<td></td>
 	</tr>
 	<tr>
 		<td>活躍程度</td>
@@ -212,22 +250,51 @@ echo "檢查 ".htmlspecialchars($user)." 的 ".$rightname[$type]." 資格如下"
 		?></td>
 		<td><?php
 		if ($require[$type]["active"] === false) {
-			echo "pass";
+			echo PASS_TEXT;
 		} else if ($registration > strtotime("-3 months")) {
 			if ($editcount > $activedays) {
-				echo "pass";
+				echo PASS_TEXT;
 			} else {
-				echo "fail";
+				echo FAIL_TEXT;
 			}
 		} else {
 			if ($activeedit > strtotime("-3 months")) {
-				echo "pass";
+				echo PASS_TEXT;
 			} else {
-				echo "fail";
+				echo FAIL_TEXT;
 			}
 		}
 		?></td>
-		<td></td>
+	</tr>
+	<tr>
+		<td>封鎖狀態</td>
+		<td><?php
+		if ($block === false) {
+			echo '無封鎖紀錄';
+		} elseif ($block === true) {
+			echo '被無限期封鎖';
+		} else {
+			echo '最近封鎖解除於' . date('Y/m/d H:i', $block);
+		}
+		?></td>
+		<td><?php
+		if ($require[$type]['block']) {
+			echo '最近封鎖解除時間 < ' . date('Y/m/d H:i', $require[$type]['block']);
+		} else {
+			echo '無';
+		}
+		?></td>
+		<td><?php
+		if ($require[$type]['block'] === false || $block === false) {
+			echo PASS_TEXT;
+		} else if ($block === true) {
+			echo FAIL_TEXT;
+		} else if ($block > $require[$type]['block']) {
+			echo FAIL_TEXT;
+		} else {
+			echo PASS_TEXT;
+		}
+		?></td>
 	</tr>
 </table>
 </body>

@@ -143,6 +143,8 @@ $res = json_decode($res, true);
 if (count($res['query']['logevents']) > 0) {
 	if ($res['query']['logevents'][0]['action'] === 'unblock') {
 		$block = strtotime($res['query']['logevents'][0]['timestamp']);
+	} else if ($res['query']['logevents'][0]['action'] === 'reblock' && $res['query']['logevents'][0]['params']['duration'] == '@0') {
+		$block = strtotime($res['query']['logevents'][0]['timestamp']);
 	} else if (!isset($res['query']['logevents'][0]['params']['expiry'])) {
 		$block = true;
 	} else {

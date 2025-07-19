@@ -20,8 +20,8 @@ $type = (isset($_GET["type"]) ? $_GET["type"] : "");
 $require = [
 	"patroller" => [
 		"registration" => false,
-		"editcount" => 250,
-		"firstedit" => strtotime("-30 days"),
+		"editcount" => 500,
+		"firstedit" => strtotime("-60 days"),
 		"active" => true,
 		"block" => strtotime("-1 year"),
 	],

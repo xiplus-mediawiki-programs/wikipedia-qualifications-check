@@ -94,7 +94,13 @@ if ($res === false) {
 	exit("get user info fail");
 }
 $uinfo = json_decode($res, true);
+if (!isset($uinfo["query"]["users"][0])) {
+	exit("get user info fail");
+}
 $uinfo = $uinfo["query"]["users"][0];
+if (isset($uinfo["invalid"])) {
+	exit("invalid username");
+}
 if (isset($uinfo["missing"])) {
 	exit("user not found");
 }
@@ -113,6 +119,9 @@ if ($res === false) {
 }
 
 $firstedit = json_decode($res, true);
+if (!isset($firstedit["query"]["usercontribs"])) {
+	exit("get firstedit fail");
+}
 if (count($firstedit["query"]["usercontribs"]) === 0) {
 	$firstedit = 0;
 } else {
@@ -130,8 +139,11 @@ if ($registration > strtotime("-3 months")) {
 		exit("get usercontribs fail");
 	}
 	$activeedit = json_decode($res, true);
+	if (!isset($activeedit["query"]["usercontribs"])) {
+		exit("get usercontribs fail");
+	}
 	$activeedit = end($activeedit["query"]["usercontribs"]);
-	$activeedit = strtotime($activeedit["timestamp"]);
+	$activeedit = ($activeedit === false ? 0 : strtotime($activeedit["timestamp"]));
 }
 
 $url = $api.'?action=query&format=json&list=logevents&utf8=1&letype=block&lelimit=1&letitle=User%3A'.urlencode($user);
@@ -140,6 +152,9 @@ if ($res === false) {
 	exit("get block fail");
 }
 $res = json_decode($res, true);
+if (!isset($res['query']['logevents'])) {
+	exit("get block fail");
+}
 if (count($res['query']['logevents']) > 0) {
 	if ($res['query']['logevents'][0]['action'] === 'unblock') {
 		$block = strtotime($res['query']['logevents'][0]['timestamp']);
